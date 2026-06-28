@@ -1,0 +1,22 @@
+{
+  "name": "LoveQuest",
+  "short_name": "LoveQuest",
+  "description": "A gamified long-distance relationship app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF6FF",
+  "theme_color": "#7B5EA7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
