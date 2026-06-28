@@ -3,42 +3,26 @@ import { supabase } from '../lib/supabase';
 import type { User } from '../types';
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
+      if (session?.user) fetchProfile(session.user.id);
+      else setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) fetchProfile(session.user.id);
+      else { setUser(null); setLoading(false); }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  async function fetchUserProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (data && !error) {
-      setUser(data as User);
-    }
+  async function fetchProfile(id: string) {
+    const { data } = await supabase.from('users').select('*').eq('id', id).single();
+    if (data) setUser(data as User);
     setLoading(false);
   }
 
@@ -50,22 +34,14 @@ export function useAuth() {
   async function signup(email: string, password: string, displayName: string, role: 'gm' | 'player') {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
+    if (!data.user) throw new Error('Signup failed');
 
-    if (data.user) {
-      // Create user profile
-      await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        role,
-        display_name: displayName,
-      });
+    await supabase.from('users').insert({
+      id: data.user.id, email, role, display_name: displayName,
+    });
 
-      // If player, create player_state
-      if (role === 'player') {
-        await supabase.from('player_state').insert({
-          player_id: data.user.id,
-        });
-      }
+    if (role === 'player') {
+      await supabase.from('player_state').insert({ player_id: data.user.id });
     }
   }
 
