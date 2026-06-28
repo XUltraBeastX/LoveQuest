@@ -1,38 +1,59 @@
-import { Home, ListChecks, Shirt, ShoppingCart } from 'lucide-react';
+import { Home, Sword, Shirt, ShoppingBag, Bell } from 'lucide-react';
 
-interface PlayerNavProps {
-  active: string;
-  onNavigate: (tab: string) => void;
-}
+interface Props { active: string; onChange: (t: string) => void; unread?: number; }
 
-const tabs = [
-  { id: 'home', label: 'Home', icon: Home },
-  { id: 'quests', label: 'Quests', icon: ListChecks },
-  { id: 'skins', label: 'Skins', icon: Shirt },
-  { id: 'shop', label: 'Shop', icon: ShoppingCart },
+const TABS = [
+  { id: 'home',    label: 'Home',    Icon: Home },
+  { id: 'quests',  label: 'Quests',  Icon: Sword },
+  { id: 'skins',   label: 'Skins',   Icon: Shirt },
+  { id: 'shop',    label: 'Shop',    Icon: ShoppingBag },
+  { id: 'notifs',  label: 'Alerts',  Icon: Bell },
 ];
 
-export function PlayerNav({ active, onNavigate }: PlayerNavProps) {
+export function PlayerNav({ active, onChange, unread = 0 }: Props) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-purple-50/95 backdrop-blur-sm border-t border-purple-200/50 px-4 pb-[env(safe-area-inset-bottom,8px)] pt-2 z-50">
-      <div className="flex justify-around max-w-md mx-auto">
-        {tabs.map(tab => {
-          const isActive = active === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onNavigate(tab.id)}
-              className={`
-                flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-colors
-                ${isActive ? 'text-purple-700' : 'text-purple-300 hover:text-purple-400'}
-              `}
-            >
-              <tab.icon size={20} strokeWidth={isActive ? 2.2 : 1.5} />
-              <span className="text-[10px] font-medium">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+    <nav style={{
+      display: 'flex', justifyContent: 'space-around',
+      background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)',
+      paddingTop: 8,
+      paddingBottom: 'max(env(safe-area-inset-bottom,8px),8px)',
+    }}>
+      {TABS.map(({ id, label, Icon }) => {
+        const on = active === id;
+        const hasBadge = id === 'notifs' && unread > 0;
+        return (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              padding: '2px 12px', position: 'relative',
+              color: on ? 'var(--color-accent-lit)' : 'var(--color-text-dim)',
+              transition: 'color 0.2s',
+            }}
+          >
+            <Icon size={20} strokeWidth={on ? 2.2 : 1.6}/>
+            <span style={{ fontSize: 9, fontWeight: on ? 700 : 500 }}>{label}</span>
+            {on && (
+              <span style={{
+                position: 'absolute', bottom: -1, width: 20, height: 2,
+                borderRadius: 2, background: 'var(--color-accent-lit)',
+              }}/>
+            )}
+            {hasBadge && (
+              <span style={{
+                position: 'absolute', top: 0, right: 8,
+                background: 'var(--color-heart)', color: 'white',
+                fontSize: 8, fontWeight: 700, borderRadius: 10,
+                padding: '1px 4px', minWidth: 14, textAlign: 'center',
+              }}>
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </nav>
   );
 }
