@@ -1,257 +1,96 @@
-import type { PlayerAccessory } from '../../types';
+interface Props { skinType?: string | null; size?: number; }
 
-interface CharacterSVGProps {
-  skinType?: string | null;
-  size?: number;
-  equippedAccessories?: PlayerAccessory[];
-  animate?: boolean;
-}
-
-const THEMES: Record<string, { dress: string; dressShade: string; collar: string; shoes: string }> = {
-  default:  { dress: '#B088E0', dressShade: '#9068C8', collar: '#DEC8F8', shoes: '#7B5EA7' },
-  ld:       { dress: '#7B55CC', dressShade: '#6A44BB', collar: '#C8A8F8', shoes: '#5533AA' },
-  princess: { dress: '#E86099', dressShade: '#CC4880', collar: '#F8B8D4', shoes: '#AA2260' },
-  nature:   { dress: '#68BB44', dressShade: '#55AA33', collar: '#B8EE88', shoes: '#337722' },
-  healing:  { dress: '#44AABB', dressShade: '#3399AA', collar: '#88DDEE', shoes: '#226688' },
-  combat:   { dress: '#CC5544', dressShade: '#BB4433', collar: '#EE9988', shoes: '#882222' },
+const THEMES: Record<string, { dress: string; shade: string; glow: string }> = {
+  default:  { dress: '#7c5cbf', shade: '#5a3d99', glow: 'rgba(124,92,191,0.4)' },
+  ld:       { dress: '#4a2d88', shade: '#33206a', glow: 'rgba(74,45,136,0.5)'  },
+  princess: { dress: '#c04880', shade: '#992060', glow: 'rgba(192,72,128,0.4)' },
+  nature:   { dress: '#3a7a40', shade: '#2a5a2e', glow: 'rgba(58,122,64,0.4)'  },
+  healing:  { dress: '#2a7a8a', shade: '#1a5a6a', glow: 'rgba(42,122,138,0.4)' },
+  combat:   { dress: '#8a2a2a', shade: '#6a1a1a', glow: 'rgba(138,42,42,0.4)'  },
 };
 
-// Earring shapes by icon_style — rendered at left ear (cx≈26,cy≈76) and right ear (cx≈84,cy≈76)
-function EarringLayer({ style }: { style: string }) {
-  const color = '#D4A0E8';
-  const shine = 'rgba(255,255,255,0.6)';
-
-  if (style === 'style1') { // hoops
-    return (
-      <g>
-        <circle cx="26" cy="80" r="5" fill="none" stroke={color} strokeWidth="1.8"/>
-        <circle cx="84" cy="80" r="5" fill="none" stroke={color} strokeWidth="1.8"/>
-      </g>
-    );
-  }
-  if (style === 'style2') { // studs
-    return (
-      <g>
-        <circle cx="26" cy="77" r="3" fill={color}/>
-        <circle cx="84" cy="77" r="3" fill={color}/>
-        <circle cx="25.2" cy="76.2" r="1" fill={shine}/>
-        <circle cx="83.2" cy="76.2" r="1" fill={shine}/>
-      </g>
-    );
-  }
-  if (style === 'style3') { // dangles
-    return (
-      <g>
-        <line x1="26" y1="76" x2="26" y2="84" stroke={color} strokeWidth="1.2"/>
-        <ellipse cx="26" cy="86" rx="2.5" ry="3.5" fill={color}/>
-        <line x1="84" y1="76" x2="84" y2="84" stroke={color} strokeWidth="1.2"/>
-        <ellipse cx="84" cy="86" rx="2.5" ry="3.5" fill={color}/>
-      </g>
-    );
-  }
-  // default fallback = studs
-  return (
-    <g>
-      <circle cx="26" cy="77" r="3" fill={color}/>
-      <circle cx="84" cy="77" r="3" fill={color}/>
-    </g>
-  );
-}
-
-// Necklace shapes by icon_style — rendered at neck area (around y≈84)
-function NecklaceLayer({ style }: { style: string }) {
-  const color = '#D4A0E8';
-  const gold = '#E8C860';
-
-  if (style === 'style1') { // delicate chain
-    return (
-      <ellipse cx="55" cy="86" rx="16" ry="4" fill="none" stroke={color} strokeWidth="1.2" opacity="0.85"/>
-    );
-  }
-  if (style === 'style2') { // chunky pendant
-    return (
-      <g>
-        <ellipse cx="55" cy="85" rx="14" ry="3" fill="none" stroke={color} strokeWidth="2" opacity="0.85"/>
-        <rect x="51" y="88" width="8" height="6" rx="2" fill={color} opacity="0.9"/>
-      </g>
-    );
-  }
-  if (style === 'style3') { // choker
-    return (
-      <rect x="39" y="83" width="32" height="4" rx="2" fill={color} opacity="0.75"/>
-    );
-  }
-  if (style === 'style4') { // locket
-    return (
-      <g>
-        <ellipse cx="55" cy="85" rx="14" ry="3" fill="none" stroke={gold} strokeWidth="1.3" opacity="0.9"/>
-        <circle cx="55" cy="90" r="4" fill={gold} opacity="0.9"/>
-        <circle cx="54.2" cy="89.2" r="1.2" fill="rgba(255,255,200,0.7)"/>
-      </g>
-    );
-  }
-  if (style === 'style5') { // crystal pendant
-    return (
-      <g>
-        <ellipse cx="55" cy="85" rx="14" ry="3" fill="none" stroke={color} strokeWidth="1.2" opacity="0.85"/>
-        <polygon points="55,88 51,96 55,94 59,96" fill={color} opacity="0.9"/>
-        <polygon points="55,88 51,96 55,94 59,96" fill="rgba(255,255,255,0.25)"/>
-      </g>
-    );
-  }
-  // default = delicate chain
-  return (
-    <ellipse cx="55" cy="86" rx="16" ry="4" fill="none" stroke={color} strokeWidth="1.2" opacity="0.85"/>
-  );
-}
-
-// Ring shapes — rendered on the hand circles at cx≈16.5,cy≈114 and cx≈93.5,cy≈114
-function RingLayer({ style }: { style: string }) {
-  const color = '#D4A0E8';
-  const gold = '#E8C860';
-
-  if (style === 'style1') { // simple band
-    return (
-      <g>
-        <circle cx="16.5" cy="114" r="5" fill="none" stroke={color} strokeWidth="2" opacity="0.85"/>
-        <circle cx="93.5" cy="114" r="5" fill="none" stroke={color} strokeWidth="2" opacity="0.85"/>
-      </g>
-    );
-  }
-  if (style === 'style2') { // gem ring
-    return (
-      <g>
-        <circle cx="16.5" cy="114" r="5" fill="none" stroke={gold} strokeWidth="1.5" opacity="0.85"/>
-        <circle cx="16.5" cy="110" r="2" fill={color}/>
-        <circle cx="93.5" cy="114" r="5" fill="none" stroke={gold} strokeWidth="1.5" opacity="0.85"/>
-        <circle cx="93.5" cy="110" r="2" fill={color}/>
-      </g>
-    );
-  }
-  if (style === 'style3') { // ornate
-    return (
-      <g>
-        <circle cx="16.5" cy="114" r="5" fill="none" stroke={gold} strokeWidth="2" opacity="0.9"/>
-        <circle cx="16.5" cy="109.5" r="2.5" fill={gold} opacity="0.9"/>
-        <circle cx="15.8" cy="108.8" r="0.9" fill="rgba(255,255,200,0.8)"/>
-        <circle cx="93.5" cy="114" r="5" fill="none" stroke={gold} strokeWidth="2" opacity="0.9"/>
-        <circle cx="93.5" cy="109.5" r="2.5" fill={gold} opacity="0.9"/>
-        <circle cx="92.8" cy="108.8" r="0.9" fill="rgba(255,255,200,0.8)"/>
-      </g>
-    );
-  }
-  return null;
-}
-
-export function CharacterSVG({ skinType, size = 140, equippedAccessories = [], animate = true }: CharacterSVGProps) {
+export function CharacterSVG({ skinType, size = 120 }: Props) {
   const t = THEMES[skinType ?? 'default'] ?? THEMES.default;
-
-  const equippedEarring = equippedAccessories.find(pa => pa.accessory?.type === 'earring');
-  const equippedNecklace = equippedAccessories.find(pa => pa.accessory?.type === 'necklace');
-  const equippedRing = equippedAccessories.find(pa => pa.accessory?.type === 'ring');
 
   return (
     <svg
-      width={size}
-      height={Math.round(size * 1.15)}
-      viewBox="0 0 110 126"
+      width={size} height={Math.round(size * 1.2)}
+      viewBox="0 0 100 120"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 6px 18px rgba(100,60,160,0.18))' }}
-      aria-label="Player character illustration"
-      role="img"
+      style={{ filter: `drop-shadow(0 4px 16px ${t.glow})` }}
+      aria-label="Player character"
     >
-      {animate && (
-        <style>{`
-          @keyframes breathe {
-            0%, 100% { transform: scaleY(1) translateY(0); }
-            50% { transform: scaleY(1.015) translateY(-1px); }
-          }
-          .char-body { animation: breathe 3.5s ease-in-out infinite; transform-origin: 55px 90px; }
-        `}</style>
+      {/* Glow aura */}
+      <ellipse cx="50" cy="108" rx="22" ry="4" fill={t.glow} opacity="0.6"/>
+
+      {/* ── Dress ── */}
+      <path d="M26 84 Q24 114 50 116 Q76 114 74 84 Q64 76 50 74 Q36 76 26 84Z" fill={t.dress}/>
+      <path d="M26 84 Q28 100 34 110 Q30 96 30 84Z" fill={t.shade} opacity="0.5"/>
+      <path d="M74 84 Q72 100 66 110 Q70 96 70 84Z" fill={t.shade} opacity="0.5"/>
+
+      {/* Arms */}
+      <path d="M32 86 Q16 92 14 106 Q18 112 26 108 Q22 100 30 92Z" fill={t.shade}/>
+      <path d="M68 86 Q84 92 86 106 Q82 112 74 108 Q78 100 70 92Z" fill={t.shade}/>
+      <circle cx="14" cy="107" r="5" fill="#e8c090"/>
+      <circle cx="86" cy="107" r="5" fill="#e8c090"/>
+
+      {/* Collar */}
+      <ellipse cx="50" cy="78" rx="18" ry="5" fill="rgba(255,255,255,0.12)"/>
+
+      {/* ── Hair back ── */}
+      <path d="M26 46 Q20 66 22 84 Q26 90 32 84 Q26 66 30 46Z" fill="#6a4018"/>
+      <path d="M74 46 Q80 66 78 84 Q74 90 68 84 Q74 66 70 46Z" fill="#6a4018"/>
+      <path d="M22 84 Q18 96 22 106 Q24 104 26 98 Q22 90 26 84Z" fill="#5a3010" opacity="0.8"/>
+      <path d="M78 84 Q82 96 78 106 Q76 104 74 98 Q78 90 74 84Z" fill="#5a3010" opacity="0.8"/>
+
+      {/* ── Head ── */}
+      <circle cx="50" cy="48" r="22" fill="#e8c090"/>
+
+      {/* ── Hair top ── */}
+      <path d="M28 46 Q32 22 50 18 Q68 22 72 46 Q68 26 50 24 Q32 26 28 46Z" fill="#7a5020"/>
+      <path d="M28 46 Q24 38 26 30 Q32 22 37 26 Q27 34 28 46Z" fill="#6a4018"/>
+      <path d="M72 46 Q76 38 74 30 Q68 22 63 26 Q73 34 72 46Z" fill="#6a4018"/>
+      <path d="M38 24 Q50 16 62 24 Q55 18 50 18 Q45 18 38 24Z" fill="#9a6a28" opacity="0.5"/>
+
+      {/* Curly strands */}
+      <path d="M27 48 Q22 58 24 70" stroke="#6a4018" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M73 48 Q78 58 76 70" stroke="#6a4018" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <circle cx="24" cy="72" r="3" fill="#6a4018"/>
+      <circle cx="76" cy="72" r="3" fill="#6a4018"/>
+
+      {/* ── Face ── */}
+      <ellipse cx="41" cy="50" rx="3" ry="3.5" fill="#1a0c04"/>
+      <ellipse cx="59" cy="50" rx="3" ry="3.5" fill="#1a0c04"/>
+      <ellipse cx="42" cy="49" rx="1.1" ry="1.3" fill="white" opacity="0.75"/>
+      <ellipse cx="60" cy="49" rx="1.1" ry="1.3" fill="white" opacity="0.75"/>
+      <path d="M38 44 Q41 42 44 43.5" stroke="#5a3010" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <path d="M56 43.5 Q59 42 62 44" stroke="#5a3010" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <path d="M45 62 Q50 67 55 62" stroke="#c08878" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+      <ellipse cx="39" cy="57" rx="4" ry="2.5" fill="#f09878" opacity="0.4"/>
+      <ellipse cx="61" cy="57" rx="4" ry="2.5" fill="#f09878" opacity="0.4"/>
+
+      {/* ── Accessories by skin ── */}
+      {skinType === 'princess' && (
+        <polygon points="50,8 53,17 62,17 55,23 57,32 50,27 43,32 45,23 38,17 47,17"
+                 fill="#f0c040" opacity="0.95"/>
       )}
-      <ellipse cx="55" cy="122" rx="24" ry="3.5" fill="#C8A8E8" opacity="0.25"/>
-      <g className={animate ? 'char-body' : ''}>
-        {/* Dress */}
-        <path d="M28 90 Q26 124 55 124 Q84 124 82 90 Q72 82 55 80 Q38 82 28 90Z" fill={t.dress}/>
-        <path d="M28 90 Q30 108 38 118 Q36 104 34 92Z" fill={t.dressShade} opacity="0.6"/>
-        <path d="M82 90 Q80 108 72 118 Q74 104 76 92Z" fill={t.dressShade} opacity="0.6"/>
-        {/* Arms */}
-        <path d="M34 92 Q18 98 16 112 Q20 120 28 116 Q24 106 32 98Z" fill={t.dressShade}/>
-        <path d="M76 92 Q92 98 94 112 Q90 120 82 116 Q86 106 78 98Z" fill={t.dressShade}/>
-        {/* Hands */}
-        <circle cx="16.5" cy="114" r="5.5" fill="#F4CCA8"/>
-        <circle cx="93.5" cy="114" r="5.5" fill="#F4CCA8"/>
-        {/* Ring layer (under hands visually on wrist) */}
-        {equippedRing && <RingLayer style={equippedRing.accessory!.icon_style}/>}
-        {/* Collar */}
-        <ellipse cx="55" cy="84" rx="20" ry="5" fill={t.collar} opacity="0.75"/>
-        {/* Necklace */}
-        {equippedNecklace && <NecklaceLayer style={equippedNecklace.accessory!.icon_style}/>}
-        {/* Hair */}
-        <path d="M29 50 Q24 70 26 90 Q30 96 36 90 Q28 72 33 50Z" fill="#8B5E28"/>
-        <path d="M81 50 Q86 70 84 90 Q80 96 74 90 Q82 72 77 50Z" fill="#8B5E28"/>
-        <path d="M26 90 Q22 100 26 110 Q28 108 30 102 Q26 96 30 90Z" fill="#7A5020" opacity="0.7"/>
-        <path d="M84 90 Q88 100 84 110 Q82 108 80 102 Q84 96 80 90Z" fill="#7A5020" opacity="0.7"/>
-        {/* Head */}
-        <circle cx="55" cy="56" r="25" fill="#F4CCA8"/>
-        <path d="M30 52 Q34 24 55 20 Q76 24 80 52 Q76 30 55 28 Q34 30 30 52Z" fill="#9A6A30"/>
-        <path d="M30 52 Q26 44 28 36 Q34 28 38 32 Q28 40 30 52Z" fill="#8B5E28"/>
-        <path d="M80 52 Q84 44 82 36 Q76 28 72 32 Q82 40 80 52Z" fill="#8B5E28"/>
-        <path d="M40 28 Q55 18 70 28 Q62 20 55 20 Q48 20 40 28Z" fill="#B8864A" opacity="0.5"/>
-        {/* Hair tails */}
-        <path d="M29 52 Q24 62 26 74" stroke="#7A5020" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-        <path d="M81 52 Q86 62 84 74" stroke="#7A5020" strokeWidth="3.5" fill="none" strokeLinecap="round"/>
-        {/* Ear dots */}
-        <circle cx="26" cy="76" r="3.5" fill="#7A5020"/>
-        <circle cx="84" cy="76" r="3.5" fill="#7A5020"/>
-        {/* Earrings */}
-        {equippedEarring && <EarringLayer style={equippedEarring.accessory!.icon_style}/>}
-        {/* Eyes */}
-        <ellipse cx="45" cy="58" rx="3.5" ry="4" fill="#2C1A08"/>
-        <ellipse cx="65" cy="58" rx="3.5" ry="4" fill="#2C1A08"/>
-        <ellipse cx="46.2" cy="56.5" rx="1.3" ry="1.5" fill="white" opacity="0.8"/>
-        <ellipse cx="66.2" cy="56.5" rx="1.3" ry="1.5" fill="white" opacity="0.8"/>
-        <ellipse cx="44.5" cy="60" rx="0.7" ry="0.8" fill="white" opacity="0.35"/>
-        <ellipse cx="64.5" cy="60" rx="0.7" ry="0.8" fill="white" opacity="0.35"/>
-        {/* Brows */}
-        <path d="M41 52 Q45 49.5 49 51.5" stroke="#7A5030" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-        <path d="M61 51.5 Q65 49.5 69 52" stroke="#7A5030" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-        {/* Nose & mouth */}
-        <path d="M54 63 Q55 65 56 63" stroke="#D4967A" strokeWidth="1" fill="none" strokeLinecap="round"/>
-        <path d="M49.5 70 Q55 75.5 60.5 70" stroke="#C4788A" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
-        <path d="M49.5 70 Q55 73 60.5 70 Q55 71.5 49.5 70Z" fill="#E4A0AA" opacity="0.4"/>
-        {/* Blush */}
-        <ellipse cx="43" cy="66" rx="5" ry="3" fill="#F8B0A8" opacity="0.45"/>
-        <ellipse cx="67" cy="66" rx="5" ry="3" fill="#F8B0A8" opacity="0.45"/>
-        {/* Skin extras */}
-        {skinType === 'princess' && (
-          <g>
-            <polygon points="55,10 58.5,20 68,20 60.5,26 63,36 55,30 47,36 49.5,26 42,20 51.5,20" fill="#F5C830" opacity="0.95"/>
-            <polygon points="55,10 58.5,20 68,20 60.5,26 63,36 55,30 47,36 49.5,26 42,20 51.5,20" fill="none" stroke="#E8A820" strokeWidth="0.8" opacity="0.6"/>
-          </g>
-        )}
-        {skinType === 'nature' && (
-          <g opacity="0.85">
-            <ellipse cx="43" cy="22" rx="9" ry="6" fill="#7ACC44"/>
-            <ellipse cx="55" cy="17" rx="8" ry="5.5" fill="#88DD55"/>
-            <ellipse cx="67" cy="22" rx="9" ry="6" fill="#7ACC44"/>
-            <ellipse cx="35" cy="28" rx="7" ry="4.5" fill="#66BB33"/>
-            <ellipse cx="75" cy="28" rx="7" ry="4.5" fill="#66BB33"/>
-          </g>
-        )}
-        {skinType === 'ld' && (
-          <g transform="translate(44, 80)">
-            <path d="M11 0 L22 5 L22 15 Q22 23 11 28 Q0 23 0 15 L0 5Z" fill="#AA88EE" opacity="0.5"/>
-            <path d="M11 5 L17 8 L17 15 Q17 20 11 23 Q5 20 5 15 L5 8Z" fill="#DEC8F8" opacity="0.65"/>
-          </g>
-        )}
-        {skinType === 'healing' && (
-          <g>
-            <path d="M45 20 Q55 12 65 20 Q60 14 55 13 Q50 14 45 20Z" fill="#88DDEE" opacity="0.7"/>
-            <ellipse cx="55" cy="13" rx="6" ry="3.5" fill="#AAEEFF" opacity="0.6"/>
-          </g>
-        )}
-      </g>
+      {skinType === 'nature' && (
+        <g opacity="0.85">
+          <ellipse cx="40" cy="18" rx="8" ry="5" fill="#5aaa30"/>
+          <ellipse cx="50" cy="13" rx="7" ry="4.5" fill="#70cc40"/>
+          <ellipse cx="60" cy="18" rx="8" ry="5" fill="#5aaa30"/>
+        </g>
+      )}
+      {skinType === 'ld' && (
+        <g transform="translate(40,74)">
+          <path d="M10 0 L20 4 L20 12 Q20 18 10 22 Q0 18 0 12 L0 4Z" fill="rgba(157,127,224,0.4)"/>
+          <path d="M10 4 L15 6 L15 12 Q15 16 10 18 Q5 16 5 12 L5 6Z" fill="rgba(220,200,255,0.5)"/>
+        </g>
+      )}
+
+      {/* Sparkle detail on dress */}
+      <text x="46" y="96" fontSize="10" opacity="0.4" fill="white">✦</text>
+      <text x="56" y="108" fontSize="7" opacity="0.3" fill="white">✦</text>
     </svg>
   );
 }
