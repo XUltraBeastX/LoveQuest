@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Coins, Trophy, Send, LogOut, Check, X, Gift } from 'lucide-react';
+import { Plus, Coins, Trophy, LogOut, Check, X, Gift } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { User, PlayerState, Quest, QuestCompletion, Accessory } from '../types';
 

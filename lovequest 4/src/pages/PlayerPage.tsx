@@ -359,7 +359,6 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
         notifications={notifications}
         unreadCount={unreadCount}
         open={notifOpen}
-        onOpen={handleBellOpen}
         onClose={handleNotifClose}
         onMarkAllRead={markAllRead}
       />

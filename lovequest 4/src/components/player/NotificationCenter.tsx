@@ -5,7 +5,6 @@ interface NotificationCenterProps {
   notifications: Notification[];
   unreadCount: number;
   open: boolean;
-  onOpen: () => void;
   onClose: () => void;
   onMarkAllRead: () => void;
 }
@@ -68,7 +67,7 @@ export function NotificationBell({ unreadCount, onClick }: { unreadCount: number
 }
 
 export function NotificationCenter({
-  notifications, unreadCount, open, onOpen, onClose, onMarkAllRead,
+  notifications, unreadCount, open, onClose, onMarkAllRead,
 }: NotificationCenterProps) {
   if (!open) return null;
 
