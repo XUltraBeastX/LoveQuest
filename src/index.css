@@ -1,48 +1,83 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Player palette ── */
-  --color-p-bg:       #FAF5FF;   /* page background */
-  --color-p-hero:     #EDE0FF;   /* hero section */
-  --color-p-card:     #F5EEFF;   /* card fill */
-  --color-p-border:   #DEC8F8;   /* card border */
-  --color-p-muted:    #C4A8E0;   /* secondary text */
-  --color-p-text:     #3D2260;   /* primary text */
-  --color-p-accent:   #7B5EA7;   /* buttons, active */
-  --color-p-xp:       #A07BD4;   /* xp bar fill */
-  --color-p-xptrack:  #E4D4F8;   /* xp bar track */
-  --color-p-heart:    #E87FAA;   /* filled heart */
-  --color-p-heartempty: #EDD8F5; /* empty heart */
-  --color-p-done:     #5BAA42;   /* quest done */
-  --color-p-warn:     #E07099;   /* warnings */
-  --color-p-pending:  #C49A30;   /* pending state */
+  /* ── Dark purple base (player) ── */
+  --color-bg:         #130d2e;
+  --color-surface:    #1e1547;
+  --color-card:       #261c56;
+  --color-border:     #3d2f7a;
+  --color-border-dim: #2a2060;
 
-  /* ── GM palette ── */
-  --color-gm-bg:      #0D0D1C;
-  --color-gm-card:    #161628;
-  --color-gm-border:  #252545;
-  --color-gm-green:   #72C472;
-  --color-gm-purple:  #9B7FD4;
-  --color-gm-red:     #D97070;
-  --color-gm-text:    #B8C8B8;
-  --color-gm-muted:   #4A6A4A;
+  /* ── Accent purple ── */
+  --color-accent:     #7c5cbf;
+  --color-accent-lit: #9d7fe0;
+  --color-accent-dim: #4a3880;
+
+  /* ── Gold ── */
+  --color-gold:       #f0c040;
+  --color-gold-dim:   #c89a20;
+
+  /* ── Green (GM + done states) ── */
+  --color-green:      #4caf72;
+  --color-green-dark: #1a3d28;
+  --color-green-dim:  #2a5c38;
+
+  /* ── Text ── */
+  --color-text:       #e8deff;
+  --color-text-muted: #8878b8;
+  --color-text-dim:   #5a4f88;
+
+  /* ── Difficulty ── */
+  --color-easy:       #4caf72;
+  --color-medium:     #f0c040;
+  --color-hard:       #e07830;
+  --color-legendary:  #e040b0;
+
+  /* ── HP / warn ── */
+  --color-heart:      #e05070;
+  --color-heart-off:  #3d2040;
+  --color-warn:       #c84030;
+  --color-warn-bg:    #3a1010;
+
+  /* ── GM dark ── */
+  --color-gm-bg:      #0a0f14;
+  --color-gm-card:    #111820;
+  --color-gm-border:  #1e3028;
+  --color-gm-green:   #4caf72;
+  --color-gm-text:    #a0c8a8;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
   height: 100%;
-  background: var(--color-p-bg);
-  font-family: -apple-system, "SF Pro Rounded", "SF Pro Text", BlinkMacSystemFont,
-               "Segoe UI", Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, "SF Pro Rounded", BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 }
 
-.scroll-area {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
+.page { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.safe-top    { padding-top: env(safe-area-inset-top, 12px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 8px); }
 
-.safe-top    { padding-top: env(safe-area-inset-top, 0px); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Scrollbar hidden */
+.scroll::-webkit-scrollbar { display: none; }
+
+/* Animations */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes pop     { 0%{transform:scale(0.8);opacity:0} 60%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+@keyframes shimmer { 0%{background-position:-200%} 100%{background-position:200%} }
+@keyframes pulse-glow { 0%,100%{box-shadow:0 0 8px rgba(240,192,64,0.3)} 50%{box-shadow:0 0 20px rgba(240,192,64,0.7)} }
+
+.animate-pop  { animation: pop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.animate-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* Difficulty colors */
+.diff-easy      { color: var(--color-easy);      background: rgba(76,175,114,0.15);  border-color: rgba(76,175,114,0.4); }
+.diff-medium    { color: var(--color-medium);    background: rgba(240,192,64,0.15);  border-color: rgba(240,192,64,0.4); }
+.diff-hard      { color: var(--color-hard);      background: rgba(224,120,48,0.15);  border-color: rgba(224,120,48,0.4); }
+.diff-legendary { color: var(--color-legendary); background: rgba(224,64,176,0.15);  border-color: rgba(224,64,176,0.4); }
