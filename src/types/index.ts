@@ -1,8 +1,16 @@
+export type Role = 'gm' | 'player';
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'legendary';
+export type QuestType = 'daily' | 'challenge';
+export type SkinType = 'ld' | 'princess' | 'nature' | 'healing' | 'combat' | 'custom';
+export type CompletionStatus = 'pending' | 'approved' | 'rejected';
+export type ShopItemType = 'real_reward' | 'cosmetic' | 'ability';
+
 export interface User {
   id: string;
   email: string;
-  role: 'gm' | 'player';
+  role: Role;
   display_name: string;
+  created_at: string;
 }
 
 export interface PlayerState {
@@ -15,6 +23,7 @@ export interface PlayerState {
   active_skin_id: string | null;
   active_title_id: string | null;
   skin_equipped_at: string | null;
+  updated_at: string;
 }
 
 export interface Quest {
@@ -22,7 +31,9 @@ export interface Quest {
   name: string;
   description: string | null;
   xp_reward: number;
-  type: 'daily' | 'challenge';
+  type: QuestType;
+  difficulty: Difficulty;
+  image_url: string | null;
   deadline: string | null;
   active: boolean;
   created_by: string;
@@ -33,7 +44,7 @@ export interface QuestCompletion {
   id: string;
   quest_id: string;
   player_id: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: CompletionStatus;
   reported_at: string;
   approved_at: string | null;
   xp_granted: number | null;
@@ -42,7 +53,8 @@ export interface QuestCompletion {
 export interface Skin {
   id: string;
   name: string;
-  type: 'ld' | 'princess' | 'nature' | 'healing' | 'combat' | 'custom';
+  type: SkinType;
+  image_url: string | null;
   stat_bonuses: Record<string, number>;
   flavor_text: string | null;
   warning_threshold_days: number | null;
@@ -50,6 +62,7 @@ export interface Skin {
   unlock_condition: 'gm_gift' | 'lvl_up' | 'shop_purchase';
   equippable_by: 'player' | 'gm' | 'both';
   owned_by_player: boolean;
+  created_at: string;
 }
 
 export interface Title {
@@ -62,32 +75,41 @@ export interface Title {
   owned_by_player: boolean;
 }
 
-export interface Accessory {
+export interface ShopItem {
   id: string;
   name: string;
-  type: 'earring' | 'necklace' | 'ring';
-  icon_style: 'style1' | 'style2' | 'style3' | 'style4' | 'style5' | 'style6' | 'style7';
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  stats: Record<string, number>;
+  description: string | null;
+  xp_price: number;
+  type: ShopItemType;
+  image_url: string | null;
+  stock: number | null;
+  purchases_count: number;
+  active: boolean;
   created_at: string;
 }
 
-export interface PlayerAccessory {
+export interface Purchase {
   id: string;
   player_id: string;
-  accessory_id: string;
-  equipped: boolean;
-  granted_at: string;
-  equipped_at: string | null;
-  accessory?: Accessory; // joined
+  item_id: string;
+  xp_spent: number;
+  purchased_at: string;
 }
 
 export interface Notification {
   id: string;
   recipient_id: string;
-  type: 'lvl_up' | 'quest_assigned' | 'gm_message' | 'skin_warning' | 'purchase_confirmed' | 'gm_gift';
+  type: 'lvl_up' | 'quest_assigned' | 'gm_message' | 'skin_warning' | 'purchase_confirmed' | 'hp_drop' | 'quest_expired';
   title: string;
   body: string;
   read: boolean;
+  created_at: string;
+}
+
+export interface XPLog {
+  id: string;
+  player_id: string;
+  amount: number;
+  reason: string;
   created_at: string;
 }
