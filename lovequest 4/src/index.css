@@ -39,12 +39,10 @@ html, body, #root {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Smooth scrolling on mobile */
 .scroll-area {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Safe area for iPhone notch */
 .safe-top    { padding-top: env(safe-area-inset-top, 0px); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }

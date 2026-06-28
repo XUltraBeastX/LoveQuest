@@ -47,7 +47,6 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '24px 24px',
     }}>
-      {/* Decorative stars */}
       {['10% 15%','85% 10%','5% 75%','90% 80%','50% 5%'].map((pos, i) => (
         <span key={i} style={{
           position: 'fixed', fontSize: [12,10,14,10,12][i],
@@ -55,14 +54,10 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
           top: pos.split(' ')[1], left: pos.split(' ')[0],
         }}>✦</span>
       ))}
-
       <div style={{ width: '100%', maxWidth: 320 }}>
-        {/* Character */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
           <CharacterSVG size={110}/>
         </div>
-
-        {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--color-p-accent)', letterSpacing: -1 }}>
             LoveQuest
@@ -71,7 +66,6 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
             Your adventure begins here ✨
           </p>
         </div>
-
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {isSignup && (
             <>
@@ -97,22 +91,11 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
               </div>
             </>
           )}
-
-          <input
-            type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="Email" required style={inputStyle}
-          />
-          <input
-            type="password" value={password} onChange={e => setPassword(e.target.value)}
-            placeholder="Password" required minLength={6} style={inputStyle}
-          />
-
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required style={inputStyle}/>
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required minLength={6} style={inputStyle}/>
           {error && (
-            <p style={{ fontSize: 12, color: 'var(--color-p-warn)', textAlign: 'center', padding: '4px 0' }}>
-              {error}
-            </p>
+            <p style={{ fontSize: 12, color: 'var(--color-p-warn)', textAlign: 'center', padding: '4px 0' }}>{error}</p>
           )}
-
           <button
             type="submit" disabled={loading}
             style={{
@@ -130,7 +113,6 @@ export function LoginPage({ onLogin, onSignup }: LoginPageProps) {
           >
             {loading ? 'Loading…' : isSignup ? 'Start your quest ✦' : 'Log in'}
           </button>
-
           <button
             type="button" onClick={() => { setIsSignup(!isSignup); setError(''); }}
             style={{

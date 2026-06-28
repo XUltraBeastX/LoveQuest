@@ -1,56 +1,57 @@
 import { useState } from 'react';
-import { Bell, LogOut, CheckCircle2, Clock, Star, Users, Heart, Swords } from 'lucide-react';
+import { LogOut, CheckCircle2, Clock, Star, Users, Heart, Swords } from 'lucide-react';
 import { CharacterSVG } from '../components/player/CharacterSVG';
+import { AccessoriesScreen } from '../components/player/AccessoriesScreen';
+import { NotificationBell, NotificationCenter } from '../components/player/NotificationCenter';
 import { usePlayerState } from '../hooks/usePlayerState';
+import { useAccessories } from '../hooks/useAccessories';
+import { useNotifications } from '../hooks/useNotifications';
 import type { User, Quest, QuestCompletion } from '../types';
 
 interface PlayerPageProps { user: User; onLogout: () => void; }
 
-// ── tiny sub-components ──────────────────────────────────────────────────────
-
-function HeroSection({ level, xp, xpMax, hp, skinType }: {
+function HeroSection({ level, xp, xpMax, hp, skinType, equippedAccessories, onBellClick, unreadCount }: {
   level: number; xp: number; xpMax: number; hp: number; skinType: string | null;
+  equippedAccessories: any[]; onBellClick: () => void; unreadCount: number;
 }) {
   const pct = Math.min(Math.round((xp / xpMax) * 100), 100);
+
+  const equippedNames = equippedAccessories
+    .map(pa => pa.accessory?.name)
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <div className="relative" style={{ background: 'var(--color-p-hero)', borderRadius: '0 0 36px 36px', paddingBottom: '20px' }}>
-      {/* Soft radial glow behind character */}
       <div style={{
         position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)',
         width: 200, height: 200, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(180,140,240,0.18) 0%, transparent 70%)',
         pointerEvents: 'none',
       }}/>
-
-      {/* Top bar */}
       <div className="safe-top" style={{ padding: '0 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, paddingBottom: 4 }}>
           <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-p-accent)', letterSpacing: -0.5 }}>
             LoveQuest
           </span>
-          <button style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(180,140,240,0.2)', border: 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--color-p-accent)', cursor: 'pointer', position: 'relative',
-          }}>
-            <Bell size={16}/>
-            <span style={{
-              position: 'absolute', top: 7, right: 7, width: 7, height: 7,
-              borderRadius: '50%', background: 'var(--color-p-warn)',
-              border: '2px solid var(--color-p-hero)',
-            }}/>
-          </button>
+          <NotificationBell unreadCount={unreadCount} onClick={onBellClick}/>
         </div>
       </div>
-
-      {/* Character */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 8 }}>
-        <CharacterSVG skinType={skinType} size={138}/>
-
-        {/* Title pill */}
+        <CharacterSVG skinType={skinType} size={138} equippedAccessories={equippedAccessories} animate/>
+        {equippedNames && (
+          <div style={{
+            marginTop: 6,
+            background: 'rgba(123,94,167,0.1)',
+            border: '1px solid rgba(123,94,167,0.2)',
+            borderRadius: 16, padding: '2px 12px',
+            fontSize: 10, color: 'var(--color-p-accent)', opacity: 0.85,
+          }}>
+            {equippedNames}
+          </div>
+        )}
         <div style={{
-          marginTop: 6,
+          marginTop: equippedNames ? 4 : 6,
           background: 'rgba(123,94,167,0.12)',
           border: '1px solid rgba(123,94,167,0.25)',
           borderRadius: 20, padding: '3px 14px',
@@ -59,8 +60,6 @@ function HeroSection({ level, xp, xpMax, hp, skinType }: {
         }}>
           LD-Coordinator
         </div>
-
-        {/* Name + LVL */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
           <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-p-text)' }}>
             The Princess
@@ -73,10 +72,7 @@ function HeroSection({ level, xp, xpMax, hp, skinType }: {
           </span>
         </div>
       </div>
-
-      {/* XP + HP */}
       <div style={{ padding: '14px 24px 0' }}>
-        {/* XP bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
           <span style={{ fontSize: 10, color: 'var(--color-p-muted)', fontWeight: 500 }}>
             XP to level {level + 1}
@@ -85,10 +81,7 @@ function HeroSection({ level, xp, xpMax, hp, skinType }: {
             {xp.toLocaleString()} / {xpMax.toLocaleString()}
           </span>
         </div>
-        <div style={{
-          height: 8, borderRadius: 8,
-          background: 'var(--color-p-xptrack)', overflow: 'hidden',
-        }}>
+        <div style={{ height: 8, borderRadius: 8, background: 'var(--color-p-xptrack)', overflow: 'hidden' }}>
           <div style={{
             height: '100%', borderRadius: 8,
             background: 'linear-gradient(90deg, var(--color-p-xp), #C09AF0)',
@@ -97,21 +90,15 @@ function HeroSection({ level, xp, xpMax, hp, skinType }: {
             boxShadow: '0 0 8px rgba(160,123,212,0.5)',
           }}/>
         </div>
-
-        {/* HP hearts */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
           <span style={{ fontSize: 10, color: 'var(--color-p-muted)', fontWeight: 500 }}>HP</span>
           <div style={{ display: 'flex', gap: 4 }}>
             {Array.from({ length: 5 }).map((_, i) => (
-              <Heart
-                key={i}
-                size={15}
-                style={{
-                  color: i < hp ? 'var(--color-p-heart)' : 'var(--color-p-heartempty)',
-                  fill: i < hp ? 'var(--color-p-heart)' : 'none',
-                  transition: 'all 0.3s',
-                }}
-              />
+              <Heart key={i} size={15} style={{
+                color: i < hp ? 'var(--color-p-heart)' : 'var(--color-p-heartempty)',
+                fill: i < hp ? 'var(--color-p-heart)' : 'none',
+                transition: 'all 0.3s',
+              }}/>
             ))}
           </div>
         </div>
@@ -123,9 +110,7 @@ function HeroSection({ level, xp, xpMax, hp, skinType }: {
 const QUEST_ICONS = [Star, Users, Heart, Swords];
 
 function QuestCard({ quest, completion, onDone }: {
-  quest: Quest;
-  completion?: QuestCompletion;
-  onDone: () => void;
+  quest: Quest; completion?: QuestCompletion; onDone: () => void;
 }) {
   const Icon = QUEST_ICONS[quest.name.length % QUEST_ICONS.length];
   const isDone = completion?.status === 'approved';
@@ -139,7 +124,6 @@ function QuestCard({ quest, completion, onDone }: {
       borderRadius: 16, padding: '12px 14px',
       transition: 'border-color 0.2s, transform 0.15s',
     }}>
-      {/* Icon */}
       <div style={{
         width: 36, height: 36, borderRadius: 12, flexShrink: 0,
         background: isDone ? 'rgba(91,170,66,0.15)' : 'var(--color-p-hero)',
@@ -148,8 +132,6 @@ function QuestCard({ quest, completion, onDone }: {
       }}>
         {isDone ? <CheckCircle2 size={16}/> : <Icon size={15}/>}
       </div>
-
-      {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: 13, fontWeight: 600,
@@ -162,12 +144,8 @@ function QuestCard({ quest, completion, onDone }: {
           +{quest.xp_reward} XP
         </div>
       </div>
-
-      {/* Action */}
       {isDone ? (
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-p-done)', whiteSpace: 'nowrap' }}>
-          ✓ Done
-        </span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-p-done)', whiteSpace: 'nowrap' }}>✓ Done</span>
       ) : isPending ? (
         <span style={{
           fontSize: 10, color: 'var(--color-p-pending)', fontWeight: 600,
@@ -182,8 +160,7 @@ function QuestCard({ quest, completion, onDone }: {
           style={{
             background: 'var(--color-p-accent)', color: 'white',
             border: 'none', borderRadius: 12, padding: '6px 14px',
-            fontSize: 11, fontWeight: 700, cursor: 'pointer',
-            whiteSpace: 'nowrap',
+            fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             boxShadow: '0 2px 8px rgba(123,94,167,0.35)',
             transition: 'transform 0.1s, box-shadow 0.1s',
           }}
@@ -199,10 +176,11 @@ function QuestCard({ quest, completion, onDone }: {
 
 function BottomNav({ active, onChange }: { active: string; onChange: (t: string) => void }) {
   const tabs = [
-    { id: 'home', label: 'Home', emoji: '🏠' },
-    { id: 'quests', label: 'Quests', emoji: '⚔️' },
-    { id: 'skins', label: 'Skins', emoji: '👗' },
-    { id: 'shop', label: 'Shop', emoji: '🛍️' },
+    { id: 'home',        label: 'Home',        emoji: '🏠' },
+    { id: 'quests',      label: 'Quests',      emoji: '⚔️' },
+    { id: 'accessories', label: 'Accessories', emoji: '💎' },
+    { id: 'skins',       label: 'Skins',       emoji: '👗' },
+    { id: 'shop',        label: 'Shop',        emoji: '🛍️' },
   ];
   return (
     <nav style={{
@@ -224,19 +202,17 @@ function BottomNav({ active, onChange }: { active: string; onChange: (t: string)
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-              padding: '4px 16px', borderRadius: 14,
+              padding: '4px 10px', borderRadius: 14,
               color: isOn ? 'var(--color-p-accent)' : 'var(--color-p-muted)',
-              transition: 'color 0.2s',
-              position: 'relative',
+              transition: 'color 0.2s', position: 'relative',
             }}
           >
-            <span style={{ fontSize: 20 }}>{tab.emoji}</span>
-            <span style={{ fontSize: 10, fontWeight: isOn ? 700 : 500 }}>{tab.label}</span>
+            <span style={{ fontSize: 18 }}>{tab.emoji}</span>
+            <span style={{ fontSize: 9, fontWeight: isOn ? 700 : 500 }}>{tab.label}</span>
             {isOn && (
               <span style={{
                 position: 'absolute', bottom: -1, left: '50%', transform: 'translateX(-50%)',
-                width: 24, height: 3, borderRadius: 2,
-                background: 'var(--color-p-accent)',
+                width: 24, height: 3, borderRadius: 2, background: 'var(--color-p-accent)',
               }}/>
             )}
           </button>
@@ -246,11 +222,13 @@ function BottomNav({ active, onChange }: { active: string; onChange: (t: string)
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
-
 export function PlayerPage({ user, onLogout }: PlayerPageProps) {
   const [tab, setTab] = useState('home');
+  const [notifOpen, setNotifOpen] = useState(false);
+
   const { state, quests, completions, loading, reportQuestDone } = usePlayerState(user.id);
+  const { playerAccessories, equipped, equip, unequip } = useAccessories(user.id);
+  const { notifications, unreadCount, markAllRead } = useNotifications(user.id);
 
   if (loading) {
     return (
@@ -272,6 +250,15 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
   const dailyQuests = quests.filter(q => q.type === 'daily');
   const challenges  = quests.filter(q => q.type === 'challenge');
 
+  function handleBellOpen() {
+    setNotifOpen(true);
+  }
+
+  function handleNotifClose() {
+    setNotifOpen(false);
+    markAllRead();
+  }
+
   return (
     <div style={{ minHeight: '100svh', background: 'var(--color-p-bg)', paddingBottom: 90 }}>
       <HeroSection
@@ -280,14 +267,14 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
         xpMax={state?.xp_to_next_level ?? 1000}
         hp={state?.hp ?? 5}
         skinType={null}
+        equippedAccessories={equipped}
+        onBellClick={handleBellOpen}
+        unreadCount={unreadCount}
       />
 
-      {/* Content */}
       <div style={{ padding: '20px 16px 0' }}>
-
         {(tab === 'home' || tab === 'quests') && (
           <>
-            {/* Daily quests */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-p-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>
                 Daily quests
@@ -296,7 +283,6 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
                 {dailyQuests.filter(q => completions.find(c => c.quest_id === q.id && c.status === 'approved')).length}/{dailyQuests.length} done
               </span>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {dailyQuests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-p-muted)', fontSize: 13 }}>
@@ -304,15 +290,12 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
                 </div>
               ) : dailyQuests.map(q => (
                 <QuestCard
-                  key={q.id}
-                  quest={q}
+                  key={q.id} quest={q}
                   completion={completions.find(c => c.quest_id === q.id)}
                   onDone={() => reportQuestDone(q.id)}
                 />
               ))}
             </div>
-
-            {/* Challenges */}
             {challenges.length > 0 && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 10px' }}>
@@ -322,9 +305,7 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {challenges.map(q => (
-                    <QuestCard
-                      key={q.id}
-                      quest={q}
+                    <QuestCard key={q.id} quest={q}
                       completion={completions.find(c => c.quest_id === q.id)}
                       onDone={() => reportQuestDone(q.id)}
                     />
@@ -333,6 +314,14 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
               </>
             )}
           </>
+        )}
+
+        {tab === 'accessories' && (
+          <AccessoriesScreen
+            playerAccessories={playerAccessories}
+            onEquip={equip}
+            onUnequip={unequip}
+          />
         )}
 
         {tab === 'skins' && (
@@ -352,21 +341,28 @@ export function PlayerPage({ user, onLogout }: PlayerPageProps) {
         )}
       </div>
 
-      {/* Logout — small, unobtrusive */}
       <button
         onClick={onLogout}
         style={{
           position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 52px)', right: 16,
           background: 'rgba(180,140,240,0.12)', border: 'none', borderRadius: 8,
           padding: '4px 8px', fontSize: 10, color: 'var(--color-p-muted)', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 4,
-          zIndex: 50,
+          display: 'flex', alignItems: 'center', gap: 4, zIndex: 50,
         }}
       >
         <LogOut size={11}/> logout
       </button>
 
       <BottomNav active={tab} onChange={setTab}/>
+
+      <NotificationCenter
+        notifications={notifications}
+        unreadCount={unreadCount}
+        open={notifOpen}
+        onOpen={handleBellOpen}
+        onClose={handleNotifClose}
+        onMarkAllRead={markAllRead}
+      />
     </div>
   );
 }

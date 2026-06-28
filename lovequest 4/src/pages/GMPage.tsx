@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Coins, Trophy, Send, LogOut, Check, X } from 'lucide-react';
+import { Plus, Coins, Trophy, Send, LogOut, Check, X, Gift } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { User, PlayerState, Quest, QuestCompletion } from '../types';
+import type { User, PlayerState, Quest, QuestCompletion, Accessory } from '../types';
 
 interface GMPageProps {
   user: User;
@@ -14,12 +14,18 @@ export function GMPage({ user, onLogout }: GMPageProps) {
   const [pendingCompletions, setPendingCompletions] = useState<(QuestCompletion & { quest_name?: string })[]>([]);
   const [showAddQuest, setShowAddQuest] = useState(false);
   const [showGrantXP, setShowGrantXP] = useState(false);
+  const [showGrantItem, setShowGrantItem] = useState(false);
   const [newQuestName, setNewQuestName] = useState('');
   const [newQuestXP, setNewQuestXP] = useState('50');
   const [grantAmount, setGrantAmount] = useState('');
   const [grantReason, setGrantReason] = useState('');
+  const [accessories, setAccessories] = useState<Accessory[]>([]);
+  const [selectedAccessoryId, setSelectedAccessoryId] = useState('');
+  const [grantItemMessage, setGrantItemMessage] = useState('');
+  const [grantItemStatus, setGrantItemStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
+    fetchAccessories();
     fetchAll();
 
     const channel = supabase
@@ -30,6 +36,11 @@ export function GMPage({ user, onLogout }: GMPageProps) {
 
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  async function fetchAccessories() {
+    const { data } = await supabase.from('accessories').select('*').order('type').order('name');
+    if (data) setAccessories(data as Accessory[]);
+  }
 
   async function fetchAll() {
     await Promise.all([fetchPlayerState(), fetchQuests(), fetchPending()]);
@@ -103,6 +114,47 @@ export function GMPage({ user, onLogout }: GMPageProps) {
     setGrantReason('');
     setShowGrantXP(false);
     fetchPlayerState();
+  }
+
+  async function grantItem() {
+    if (!selectedAccessoryId || !playerState) return;
+    setGrantItemStatus('idle');
+
+    // Find the player to grant to
+    const { data: players } = await supabase.from('users').select('id').eq('role', 'player').limit(1);
+    const playerId = players?.[0]?.id;
+    if (!playerId) { setGrantItemStatus('error'); return; }
+
+    const acc = accessories.find(a => a.id === selectedAccessoryId);
+
+    // Grant the accessory (upsert in case they already own it)
+    const { error } = await supabase.from('player_accessories').upsert({
+      player_id: playerId,
+      accessory_id: selectedAccessoryId,
+      equipped: false,
+    }, { onConflict: 'player_id,accessory_id' });
+
+    if (error) { setGrantItemStatus('error'); return; }
+
+    // Send notification
+    const body = grantItemMessage.trim()
+      ? grantItemMessage.trim()
+      : `Your GM gifted you: ${acc?.name ?? 'a new accessory'} ✨`;
+
+    await supabase.from('notifications').insert({
+      recipient_id: playerId,
+      type: 'gm_gift',
+      title: `New accessory: ${acc?.name ?? 'Gift'}`,
+      body,
+    });
+
+    setGrantItemStatus('success');
+    setSelectedAccessoryId('');
+    setGrantItemMessage('');
+    setTimeout(() => {
+      setShowGrantItem(false);
+      setGrantItemStatus('idle');
+    }, 1500);
   }
 
   return (
@@ -181,8 +233,8 @@ export function GMPage({ user, onLogout }: GMPageProps) {
             {[
               { icon: Plus, label: 'Add quest', action: () => setShowAddQuest(true) },
               { icon: Coins, label: 'Grant XP', action: () => setShowGrantXP(true) },
+              { icon: Gift, label: 'Grant Item', action: () => setShowGrantItem(true) },
               { icon: Trophy, label: 'LVL UP', action: () => alert('Coming in Sprint 5') },
-              { icon: Send, label: 'Message', action: () => alert('Coming in Sprint 7') },
             ].map(btn => (
               <button
                 key={btn.label}
@@ -251,6 +303,53 @@ export function GMPage({ user, onLogout }: GMPageProps) {
                 Cancel
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Grant Item Modal */}
+        {showGrantItem && (
+          <div className="bg-gm-card border border-gm-border rounded-xl p-4 space-y-3">
+            <h3 className="text-gm-green text-[13px] font-semibold">Grant accessory</h3>
+            {grantItemStatus === 'success' ? (
+              <div className="text-center py-3 text-gm-green text-[13px]">✓ Gift sent!</div>
+            ) : (
+              <>
+                <select
+                  value={selectedAccessoryId}
+                  onChange={e => setSelectedAccessoryId(e.target.value)}
+                  className="w-full bg-[#0a0a1e] border border-gm-border rounded-lg px-3 py-2 text-[13px] text-white focus:outline-none focus:border-gm-green"
+                >
+                  <option value="">Select an accessory…</option>
+                  {accessories.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.type} · {a.rarity})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={grantItemMessage}
+                  onChange={e => setGrantItemMessage(e.target.value)}
+                  placeholder="Personal message (optional)"
+                  className="w-full bg-[#0a0a1e] border border-gm-border rounded-lg px-3 py-2 text-[13px] text-white placeholder:text-[#4a4a6a] focus:outline-none focus:border-gm-green"
+                />
+                {grantItemStatus === 'error' && (
+                  <p className="text-[11px] text-red-400">Something went wrong. Try again.</p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={grantItem}
+                    disabled={!selectedAccessoryId}
+                    className="flex-1 bg-[#1a3a1a] text-gm-green rounded-lg py-2 text-[12px] font-medium hover:bg-[#2a4a2a] disabled:opacity-40"
+                  >
+                    Grant ✨
+                  </button>
+                  <button onClick={() => { setShowGrantItem(false); setGrantItemStatus('idle'); }} className="px-4 text-[#4a4a6a] text-[12px] hover:text-white">
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 

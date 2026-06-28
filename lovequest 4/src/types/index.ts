@@ -61,3 +61,33 @@ export interface Title {
   granted_at_level: number | null;
   owned_by_player: boolean;
 }
+
+export interface Accessory {
+  id: string;
+  name: string;
+  type: 'earring' | 'necklace' | 'ring';
+  icon_style: 'style1' | 'style2' | 'style3' | 'style4' | 'style5' | 'style6' | 'style7';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  stats: Record<string, number>;
+  created_at: string;
+}
+
+export interface PlayerAccessory {
+  id: string;
+  player_id: string;
+  accessory_id: string;
+  equipped: boolean;
+  granted_at: string;
+  equipped_at: string | null;
+  accessory?: Accessory; // joined
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  type: 'lvl_up' | 'quest_assigned' | 'gm_message' | 'skin_warning' | 'purchase_confirmed' | 'gm_gift';
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+}

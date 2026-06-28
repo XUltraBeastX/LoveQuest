@@ -102,7 +102,7 @@ create table public.purchases (
 create table public.notifications (
   id uuid primary key default gen_random_uuid(),
   recipient_id uuid references public.users(id) on delete cascade not null,
-  type text not null check (type in ('lvl_up', 'quest_assigned', 'gm_message', 'skin_warning', 'purchase_confirmed')),
+  type text not null check (type in ('lvl_up', 'quest_assigned', 'gm_message', 'skin_warning', 'purchase_confirmed', 'gm_gift')),
   title text not null,
   body text not null,
   read boolean default false,
@@ -188,9 +188,42 @@ create policy "Player read own xp" on public.xp_log for select using (player_id 
 create policy "GM manage xp log" on public.xp_log for all using (public.is_gm());
 
 
+-- 11. Accessories catalog (GM creates)
+create table public.accessories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  type text not null check (type in ('earring', 'necklace', 'ring')),
+  icon_style text not null default 'style1' check (icon_style in ('style1','style2','style3','style4','style5','style6','style7')),
+  rarity text not null default 'common' check (rarity in ('common','rare','epic','legendary')),
+  stats jsonb not null default '{}',
+  created_at timestamptz default now()
+);
+
+-- 12. Player accessories (owned + equipped)
+create table public.player_accessories (
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid references public.users(id) on delete cascade not null,
+  accessory_id uuid references public.accessories(id) on delete cascade not null,
+  equipped boolean not null default false,
+  granted_at timestamptz default now(),
+  equipped_at timestamptz,
+  unique(player_id, accessory_id)
+);
+
+alter table public.accessories enable row level security;
+alter table public.player_accessories enable row level security;
+
+create policy "Players read accessories" on public.accessories for select using (true);
+create policy "GM manage accessories" on public.accessories for all using (public.is_gm());
+
+create policy "Player read own accessories" on public.player_accessories for select using (player_id = auth.uid() or public.is_gm());
+create policy "Player equip own accessories" on public.player_accessories for update using (player_id = auth.uid());
+create policy "GM manage player accessories" on public.player_accessories for all using (public.is_gm());
+
 -- ============================================
 -- Enable Realtime
 -- ============================================
 alter publication supabase_realtime add table player_state;
 alter publication supabase_realtime add table quest_completions;
 alter publication supabase_realtime add table notifications;
+alter publication supabase_realtime add table player_accessories;
