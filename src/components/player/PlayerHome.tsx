@@ -1,7 +1,7 @@
 import { CharacterSVG } from './CharacterSVG';
-import { XPBar, HPHearts, Card, SectionLabel, DiffBadge, Btn, Thumbnail } from '../ui';
+import { XPBar, HPHearts, Card, SectionLabel } from '../ui';
+import { QuestCard } from './QuestCard';
 import type { PlayerState, Quest, QuestCompletion, Skin, Title } from '../../types';
-import { CheckCircle2, Clock } from 'lucide-react';
 
 interface Props {
   state: PlayerState;
@@ -129,38 +129,14 @@ export function PlayerHome({ state, quests, completions, activeSkin, activeTitle
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {daily.map(q => {
-              const comp = completions.find(c => c.quest_id === q.id);
-              const done = comp?.status === 'approved';
-              const pending = comp?.status === 'pending';
-              return (
-                <Card key={q.id} style={{ padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Thumbnail url={q.image_url} size={40} radius={8}/>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: done ? 'var(--color-green)' : 'var(--color-text)', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {q.name}
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <DiffBadge diff={q.difficulty}/>
-                        <span style={{ fontSize: 10, color: 'var(--color-gold)' }}>+{q.xp_reward} XP</span>
-                      </div>
-                    </div>
-                    {done ? (
-                      <CheckCircle2 size={18} style={{ color: 'var(--color-green)', flexShrink: 0 }}/>
-                    ) : pending ? (
-                      <span style={{ fontSize: 10, color: 'var(--color-gold)', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                        <Clock size={11}/> Pending
-                      </span>
-                    ) : (
-                      <Btn size="sm" onClick={() => onQuestDone(q.id)} style={{ flexShrink: 0 }}>
-                        Report done
-                      </Btn>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
+            {daily.map(q => (
+              <QuestCard
+                key={q.id}
+                quest={q}
+                completion={completions.find(c => c.quest_id === q.id)}
+                onQuestDone={onQuestDone}
+              />
+            ))}
           </div>
         )}
       </div>
