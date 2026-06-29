@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import { CharacterSVG } from './CharacterSVG';
 import { XPBar, HPHearts, Card, SectionLabel } from '../ui';
 import { QuestCard } from './QuestCard';
@@ -12,8 +13,24 @@ interface Props {
   onQuestDone: (id: string) => void;
 }
 
+interface XPFloat { delta: number; key: number; }
+
 export function PlayerHome({ state, quests, completions, activeSkin, activeTitle, onQuestDone }: Props) {
   const daily = quests.filter(q => q.type === 'daily');
+  const prevXP = useRef<number>(state.current_xp);
+  const [xpFloat, setXPFloat] = useState<XPFloat | null>(null);
+
+  useEffect(() => {
+    const prev = prevXP.current;
+    const curr = state.current_xp;
+    if (curr > prev) {
+      setXPFloat({ delta: curr - prev, key: Date.now() });
+      const t = setTimeout(() => setXPFloat(null), 700);
+      prevXP.current = curr;
+      return () => clearTimeout(t);
+    }
+    prevXP.current = curr;
+  }, [state.current_xp]);
 
   return (
     <div style={{ padding: '0 0 16px' }}>
@@ -61,7 +78,24 @@ export function PlayerHome({ state, quests, completions, activeSkin, activeTitle
         </div>
 
         {/* XP */}
-        <XPBar current={state.current_xp} max={state.xp_to_next_level} level={state.current_level}/>
+        <div style={{ position: 'relative' }}>
+          {xpFloat && (
+            <span
+              key={xpFloat.key}
+              className="xp-float"
+              style={{
+                position: 'absolute', top: -4, right: 2,
+                fontSize: 13, fontWeight: 800,
+                color: 'var(--color-gold)',
+                pointerEvents: 'none', userSelect: 'none',
+                textShadow: '0 0 8px rgba(240,192,64,0.6)',
+              }}
+            >
+              +{xpFloat.delta} XP
+            </span>
+          )}
+          <XPBar current={state.current_xp} max={state.xp_to_next_level} level={state.current_level}/>
+        </div>
 
         {/* HP */}
         <div style={{ marginTop: 10 }}>
