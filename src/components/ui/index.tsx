@@ -20,13 +20,22 @@ export function XPBar({ current, max, level }: { current: number; max: number; l
         <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>XP to level {level + 1}</span>
         <span style={{ fontSize: 10, color: 'var(--color-accent-lit)', fontWeight: 600 }}>{current.toLocaleString()} / {max.toLocaleString()}</span>
       </div>
-      <div style={{ height: 7, borderRadius: 8, background: 'var(--color-border)', overflow: 'hidden' }}>
+      <div style={{ height: 7, borderRadius: 8, background: 'var(--color-border)', overflow: 'visible', position: 'relative' }}>
         <div style={{
           height: '100%', borderRadius: 8, width: `${pct}%`,
           background: 'linear-gradient(90deg, var(--color-accent), var(--color-accent-lit))',
           boxShadow: '0 0 8px rgba(157,127,224,0.6)',
           transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
-        }}/>
+          position: 'relative', overflow: 'hidden',
+        }}>
+          {pct > 3 && (
+            <div className="xp-glow-dot" style={{
+              position: 'absolute', right: -3, top: '50%', transform: 'translateY(-50%)',
+              width: 7, height: 7, borderRadius: '50%',
+              background: 'var(--color-accent-lit)',
+            }}/>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -74,7 +83,10 @@ export function Card({ children, style = {}, onClick }: {
     <div
       onClick={onClick}
       style={{
-        background: 'var(--color-card)', border: '1px solid var(--color-border)',
+        background: 'rgba(38,28,86,0.72)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid var(--color-border)',
         borderRadius: 16, padding: '12px 14px',
         cursor: onClick ? 'pointer' : undefined,
         transition: 'border-color 0.2s',

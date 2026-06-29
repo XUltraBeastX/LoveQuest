@@ -51,7 +51,10 @@
 
 html, body, #root {
   height: 100%;
-  background: var(--color-bg);
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(124,92,191,0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(74,45,136,0.07) 0%, transparent 55%),
+    var(--color-bg);
   color: var(--color-text);
   font-family: -apple-system, "SF Pro Rounded", BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -87,6 +90,39 @@ html, body, #root {
   100% { transform: translateY(-28px); opacity: 0; }
 }
 .xp-float { animation: xp-float 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+/* ── Tier 1 ─────────────────────────────────────────────────────────── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.02); }
+}
+.breathe { animation: breathe 3s ease-in-out infinite; }
+
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 4px 2px rgba(157,127,224,0.55); }
+  50%       { box-shadow: 0 0 9px 4px rgba(157,127,224,0.9);  }
+}
+.xp-glow-dot { animation: dot-pulse 1.4s ease-in-out infinite; }
+
+/* ── Tier 2 ─────────────────────────────────────────────────────────── */
+@keyframes aurora-drift {
+  0%, 100% { transform: translate(0,    0)    scale(1);    opacity: 0.65; }
+  40%       { transform: translate(5%,  3%)   scale(1.06); opacity: 0.85; }
+  70%       { transform: translate(-3%, 5%)   scale(0.96); opacity: 0.5;  }
+}
+.aurora-orb { animation: aurora-drift var(--dur, 9s) ease-in-out infinite; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(1);   }
+  50%       { opacity: 0.75; transform: scale(1.6); }
+}
+.star-twinkle { animation: twinkle var(--dur, 2.5s) ease-in-out infinite; }
+
+@keyframes burst-fly {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: var(--fly, translate(0,-20px)) scale(0); opacity: 0; }
+}
+.burst-particle { animation: burst-fly 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 
 /* Difficulty colors */
 .diff-easy      { color: var(--color-easy);      background: rgba(76,175,114,0.15);  border-color: rgba(76,175,114,0.4); }

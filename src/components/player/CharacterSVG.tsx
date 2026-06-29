@@ -17,6 +17,7 @@ export function CharacterSVG({ skinType, size = 120 }: Props) {
       width={size} height={Math.round(size * 1.2)}
       viewBox="0 0 100 120"
       xmlns="http://www.w3.org/2000/svg"
+      className="breathe"
       style={{ filter: `drop-shadow(0 4px 16px ${t.glow})` }}
       aria-label="Player character"
     >

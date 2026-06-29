@@ -3,6 +3,16 @@ import { CheckCircle2, Clock } from 'lucide-react';
 import { Card, Thumbnail, DiffBadge } from '../ui';
 import type { Quest, QuestCompletion } from '../../types';
 
+const DIFF_COLOR: Record<string, string> = {
+  easy: 'var(--color-easy)', medium: 'var(--color-medium)',
+  hard: 'var(--color-hard)', legendary: 'var(--color-legendary)',
+};
+
+const BURST_FLIES = [
+  'translate(-22px,-22px)', 'translate(0px,-28px)', 'translate(22px,-22px)',
+  'translate(26px,0px)',    'translate(22px,20px)', 'translate(-22px,20px)',
+];
+
 interface Props {
   quest: Quest;
   completion: QuestCompletion | undefined;
@@ -14,7 +24,8 @@ const RING_R = 16;
 const RING_CIRC = 2 * Math.PI * RING_R; // 100.53
 
 export function QuestCard({ quest, completion, onQuestDone }: Props) {
-  const [holding, setHolding] = useState(false);
+  const [holding, setHolding]   = useState(false);
+  const [bursting, setBursting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const approved = completion?.status === 'approved';
@@ -24,6 +35,9 @@ export function QuestCard({ quest, completion, onQuestDone }: Props) {
     setHolding(true);
     timerRef.current = setTimeout(() => {
       setHolding(false);
+      setBursting(true);
+      navigator.vibrate?.(15);
+      setTimeout(() => setBursting(false), 500);
       onQuestDone(quest.id);
     }, HOLD_MS);
   }
@@ -36,14 +50,28 @@ export function QuestCard({ quest, completion, onQuestDone }: Props) {
     setHolding(false);
   }
 
+  const leftBorder = approved
+    ? '3px solid var(--color-green)'
+    : pending
+    ? '3px solid var(--color-gold-dim)'
+    : `3px solid ${DIFF_COLOR[quest.difficulty] ?? 'var(--color-border)'}`;
+
   return (
+    <div style={{ position: 'relative' }}>
+      {bursting && BURST_FLIES.map((fly, i) => (
+        <span
+          key={i}
+          className="burst-particle"
+          style={{
+            position: 'absolute', top: '50%', right: 20,
+            fontSize: 11, color: 'var(--color-gold)', pointerEvents: 'none',
+            '--fly': fly,
+          } as React.CSSProperties}
+        >✦</span>
+      ))}
     <Card style={{
       padding: '10px 12px',
-      borderLeft: approved
-        ? '3px solid var(--color-green)'
-        : pending
-        ? '3px solid var(--color-gold-dim)'
-        : '3px solid transparent',
+      borderLeft: leftBorder,
       transition: 'border-color 0.3s',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -122,5 +150,6 @@ export function QuestCard({ quest, completion, onQuestDone }: Props) {
         )}
       </div>
     </Card>
+    </div>
   );
 }
